@@ -1,7 +1,9 @@
 package com.hostapp.journalApp.controller;
 
 import com.hostapp.journalApp.entity.JournalEntry;
+import com.hostapp.journalApp.entity.User;
 import com.hostapp.journalApp.service.JournalEntryService;
+import com.hostapp.journalApp.service.UserService;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,17 +20,22 @@ public class JournalEntryController {
     @Autowired
     private JournalEntryService journalEntryService;
 
-    @GetMapping
-    public ResponseEntity<?> getAll(){
-        List<JournalEntry> all = journalEntryService.getAll();
+    @Autowired
+    private UserService userService;
+
+    @GetMapping("{userName}")
+    public ResponseEntity<?> getAll(@PathVariable String userName) {
+        User user =  userService.findByUserName(userName);
+        List<JournalEntry> all = user.getJournalEntries();
         if(all!=null && !all.isEmpty()){
             return new ResponseEntity<>(all, HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
-    @PostMapping
-    public ResponseEntity<?> createEntry(@RequestBody JournalEntry myEntry){
+    @PostMapping("{username}")
+    public ResponseEntity<?> createEntry(@RequestBody JournalEntry myEntry, @PathVariable String userName) {
         try{
+            User user =  userService.findByUserName(userName);
             myEntry.setDate(LocalDateTime.now());
             journalEntryService.saveEntry(myEntry);
             return new ResponseEntity<>(myEntry, HttpStatus.CREATED);
